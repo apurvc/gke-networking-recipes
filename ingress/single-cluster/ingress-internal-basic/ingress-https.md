@@ -18,7 +18,11 @@
    curl -v -k https://foo.example.com --resolve foo.example.com:443:[10.132.0.8] LBIP 
 
 ### Self signed cert served from kube
-   Deploy bitnami nginx ingress controller then 
+   Deploy bitnami nginx ingress controller then add update the service via values.yaml
+     annotations: {
+    cloud.google.com/load-balancer-type: "Internal",
+    networking.gke.io/internal-load-balancer-allow-global-access: "true"
+  }
 
    kubectl create secret tls foo-exmple-tls --key="example.key" --cert="example.crt"
    k apply -f ingress-localtls.yaml
