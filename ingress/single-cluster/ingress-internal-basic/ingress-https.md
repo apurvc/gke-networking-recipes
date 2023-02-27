@@ -28,3 +28,8 @@
    k apply -f ingress-localtls.yaml
 
    Reference the secret in Ingress definitation 
+
+### Create Private cluster with authorized end point in a new subnet
+   Find machine ip for master authorized network by 
+   curl ifconfig.me
+   gcloud container clusters create test-ilb     --zone=europe-west1-b --enable-ip-alias --release-channel rapid --create-subnetwork name=my-subnet-0 --enable-master-authorized-networks --enable-ip-alias --enable-private-nodes --master-ipv4-cidr 172.16.0.32/28  --master-authorized-networks 35.195.36.48/32
