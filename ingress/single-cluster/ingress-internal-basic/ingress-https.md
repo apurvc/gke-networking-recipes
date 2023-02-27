@@ -13,23 +13,25 @@
     gcloud compute ssl-certificates create foocrt     --certificate example.crt     --private-key example.key     --region europe-west1
     k apply -f internal-ingress-https.yaml
    
-### Test
+ ### Test
    
-   curl -v -k https://foo.example.com --resolve foo.example.com:443:[10.132.0.8] LBIP 
+    curl -v -k https://foo.example.com --resolve foo.example.com:443:[10.132.0.8] LBIP 
 
-### Self signed cert served from kube
-   Deploy bitnami nginx ingress controller then add update the service via values.yaml
+ ### Self Signed certificate  served from kube  
+ 
+    Deploy bitnami nginx ingress controller then add update the service via values.yaml
      annotations: {
     cloud.google.com/load-balancer-type: "Internal",
     networking.gke.io/internal-load-balancer-allow-global-access: "true"
-  }
+    }
 
    kubectl create secret tls foo-exmple-tls --key="example.key" --cert="example.crt"
    k apply -f ingress-localtls.yaml
 
    Reference the secret in Ingress definitation 
 
-### Create Private cluster with authorized end point in a new subnet
-   Find machine ip for master authorized network by 
-   curl ifconfig.me
-   gcloud container clusters create test-ilb     --zone=europe-west1-b --enable-ip-alias --release-channel rapid --create-subnetwork name=my-subnet-0 --enable-master-authorized-networks --enable-ip-alias --enable-private-nodes --master-ipv4-cidr 172.16.0.32/28  --master-authorized-networks 35.195.36.48/32
+  ### Create Private cluster with authorized end point in a new subnet
+   
+    Find machine ip for master authorized network by 
+    curl ifconfig.me
+    gcloud container clusters create test-ilb     --zone=europe-west1-b --enable-ip-alias --release-channel rapid --create-subnetwork name=my-subnet-0 --enable-master-authorized-networks --enable-ip-alias --enable-private-nodes --master-ipv4-cidr 172.16.0.32/28  --master-authorized-networks 35.195.36.48/32
