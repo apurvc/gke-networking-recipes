@@ -1,0 +1,82 @@
+#kubectl create secret generic my-secret --from-literal=client_id=XX.apps.googleusercontent.com     --from-literal=client_secret=XX
+#Configure consent and ouath client in GCP
+apiVersion: cloud.google.com/v1
+kind: BackendConfig
+metadata:
+  name: config-default
+spec:
+  iap:
+    enabled: true
+    oauthclientCredentials:
+      secretName: my-secret
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: foo-internal 
+  annotations:
+    #ingress.gcp.kubernetes.io/pre-shared-cert: "foocrt"
+    kubernetes.io/ingress.class: "gce-internal"
+    kubernetes.io/ingress.regional-static-ip-name: helloweb-ip1    
+    #gcloud compute addresses create helloweb-ip1 --region=europe-west1 --subnet=default --purpose=SHARED_LOADBALANCER_VIP
+spec:
+  tls:
+    - hosts: 
+       - complexglass.uk.to
+      secretName: foo-exmple-tls
+  rules:
+  - host: complexglass.uk.to
+    http:
+      paths:
+      - path: /
+        backend:        
+          service:
+            name: foo
+            port:
+             number: 8080
+        pathType: Prefix
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: foo
+  annotations:
+    cloud.google.com/neg: '{"ingress": true,"exposed_ports": {"8080":{}}}'
+    cloud.google.com/backend-config: '{"default": "config-default"}'
+    networking.gke.io/internal-load-balancer-allow-global-access: "true"
+spec:
+  ports:
+  - port: 8080
+    targetPort: 8080
+    name: http 
+  selector:
+    app: foo
+  type: ClusterIP
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: foo
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: foo
+  template:
+    metadata:
+      labels:
+        app: foo
+    spec:
+      containers:
+      - name: whereami
+        image: us-docker.pkg.dev/google-samples/containers/gke/whereami:v1.2.19
+        ports:
+          - name: http
+            containerPort: 8080
+        readinessProbe:
+          httpGet:
+            path: /healthz
+            port: 8080
+            scheme: HTTP
+          initialDelaySeconds: 5
+          timeoutSeconds: 1
